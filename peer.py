@@ -43,7 +43,10 @@ class Peer:
 class Network:
     def __init__(self, peers) -> None:
         self.peers = peers
-        self.transactions = []
+        self.peer_ids = []
+
+        for i in range(len(self.peers)):
+            self.peer_ids.append(self.peers[i].id)
 
     def generate_network(self):
         for peer in self.peers:
@@ -88,3 +91,46 @@ class Network:
                     peer.add_neighbor(self.peers[(i+j+1)%num_peers])
                     peer.add_neighbor(self.peers[(i+j+2)%num_peers])
                     
+
+    def init_properties(self):
+        self.p = [[0 for i in range(len(self.peers))] for j in range(len(self.peers))]
+        self.c = [[0 for i in range(len(self.peers))] for j in range(len(self.peers))]
+        self.d = [[None for i in range(len(self.peers))] for j in range(len(self.peers))]
+
+        for i in range(len(self.peers)):
+            for j in range(len(self.peers)):
+                if i == j:
+                    self.p[i][j] = 0
+                    self.c[i][j] = 0
+                    self.d[i][j] = None
+                else:
+                    # Init the propagation delay
+                    val = self.p[j][i]
+                    
+                    # In ms
+                    if val != 0:
+                        self.p[i][j] = val
+                    else:
+                        r = random.randint(10, 500)
+                        self.p[i][j] = r
+
+                    # Init the computation delay
+                    speed_i = self.peers[i].speed
+                    speed_j = self.peers[j].speed
+
+                    # In Mbps
+                    if speed_i == 'fast' and speed_j == 'fast':
+                        self.c[i][j] = 100
+                    else:
+                        self.c[i][j] = 5
+
+                    # Init the queueing delay
+                    # In ms
+                    if self.d[j][i] is not None:
+                        self.d[i][j] = self.d[j][i]
+                    else:
+                        self.d[i][j] = lambda: random.expovariate(self.c[i][j]/96)
+
+class Simulation():
+    def __init__(self) -> None:
+        pass
