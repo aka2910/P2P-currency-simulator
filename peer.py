@@ -11,6 +11,9 @@ class Peer:
     
     def add_neighbor(self, neighbor):
         self.neighbors.append(neighbor)
+
+    def disconnect_peer(self):
+        self.neighbors = []
     
     def generate_transactios(self, Ttx, time, peers):
         # generate transaction for block
@@ -37,4 +40,51 @@ class Peer:
         return transactions
     
 
-    
+class Network:
+    def __init__(self, peers) -> None:
+        self.peers = peers
+        self.transactions = []
+
+    def generate_network(self):
+        for peer in self.peers:
+            num_neighbors = random.randint(4, 8)
+            num_neighbors = min(num_neighbors, len(self.peers))
+
+            temp_list = self.peers.copy() - [peer]
+            neighbors = random.sample(temp_list, num_neighbors)
+
+            for n in neighbors:
+                peer.add_neighbor(n)
+                n.add_neighbor(peer)
+
+    def check_graph(self):
+        # check if the graph is connected
+        # if not, connect the graph
+        
+        visited = [False for i in range(len(self.peers))]
+
+        def dfs(node):
+            visited[node.id] = True
+            for n in node.neighbors:
+                if not visited[n.id]:
+                    dfs(n)
+        dfs(self.peers[0])
+        connected = True
+
+        for i in range(len(visited)):
+            if not visited[i]:
+                connected = False
+
+        if not connected:
+            # connect the graph
+            num_peers = len(self.peers)
+            for i in range(num_peers):
+                peer = self.peers[i]
+                peer.disconnect_peer()
+
+                for j in range(4):
+                    peer.add_neighbor(self.peers[(i+j-2)%num_peers])
+                    peer.add_neighbor(self.peers[(i+j-1)%num_peers])
+                    peer.add_neighbor(self.peers[(i+j+1)%num_peers])
+                    peer.add_neighbor(self.peers[(i+j+2)%num_peers])
+                    
