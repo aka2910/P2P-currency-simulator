@@ -1,6 +1,10 @@
 import argparse
 
 
+class Simulation():
+    def __init__(self) -> None:
+        pass
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="P2P currency simulator")
     parser.add_argument("--n", type=int, default=10, help="Number of peers")
