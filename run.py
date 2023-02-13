@@ -1,8 +1,11 @@
 import argparse
 
 
-class Simulation():
+class Simulator():
     def __init__(self) -> None:
+        pass
+
+    def broadcast(self, peer, msg, time):
         pass
 
 if __name__ == "__main__":
