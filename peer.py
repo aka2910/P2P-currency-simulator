@@ -95,7 +95,8 @@ class Peer:
             parent = self.node_block_map[block.prevblock.blkid]
             node = Node(block, self.env.now)
             if node.block.blkid not in [x.block.blkid for x in parent.children]:
-                parent.children.append(node)
+                pass
+            parent.children.append(node)
 
             # Update the node_block_map
             self.node_block_map[block.blkid] = node
@@ -159,7 +160,8 @@ class Peer:
             node = Node(block, self.env.now)
             parent = self.node_block_map[block.prevblock.blkid]
             if node.block.blkid not in [x.block.blkid for x in parent.children]:
-                parent.children.append(node)
+                pass
+            parent.children.append(node)
 
             self.node_block_map[block.blkid] = node
             yield self.env.process(self.broadcast_block(block))
@@ -202,6 +204,7 @@ class Peer:
         queue = [self.root]
         visited = set()
         visited.add(self.root)
+        edges = set()
         # print([x.block.blkid for x in  set(queue[0].children)])
         while queue:
             node = queue.pop(0)
@@ -209,8 +212,9 @@ class Peer:
             for child in node.children:
                 if child in visited:
                     continue
-                f.edge(str(reverse_mapping[node.block.blkid]), str(reverse_mapping[child.block.blkid]))
+                edges.add((str(reverse_mapping[node.block.blkid]), str(reverse_mapping[child.block.blkid])))
                 visited.add(child)
                 queue.append(child)
-
+        for e in edges:
+            f.edge(e[0], e[1])
         f.render()
