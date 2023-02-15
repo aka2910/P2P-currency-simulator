@@ -1,5 +1,5 @@
 import argparse
-
+import simpy
 
 class Simulator():
     def __init__(self) -> None:
@@ -15,3 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--z1", type=float, default=0.5, help = "percent of low CPU peers")
     parser.add_argument("--Ttx", type=float, default=0.5, help = "mean interarrival time of transactions")
     parser.add_argument("--time", type=float, default=100, help = "simulation time")
+
+    env = simpy.Environment()
+    # env.process()
+    # env.run(until=100)

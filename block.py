@@ -1,12 +1,17 @@
 class Block:
-    def __init__(self, blkid, prevblock, timestamp, transactions, userid):
-        self.blkid = blkid
+    def __init__(self, prevblock, timestamp, transactions, userid):
         self.prevblock = prevblock
         self.timestamp = timestamp
         self.transactions = transactions
         self.balances = self.prevblock.balances.copy()
         self.height = self.prevblock.height + 1
         self.userid = userid
+
+        trans_string = ""
+        for transaction in transactions:
+            trans_string += transaction + " "
+
+        self.blkid = hash(str(prevblock.blkid) + str(timestamp) + str(trans_string) + str(userid))
 
     def validate(self):
         # check if the transactions are valid
@@ -16,7 +21,9 @@ class Block:
             #     return False
             if t.amount <= 0:
                 return False
-            if self.balances[t.sender] < t.amount:
+            if balance_copy[t.sender] < t.amount:
+                # Changing self.balances to balance_copy because I think
+                # that the current balance should be enough to pay for
                 return False
             balance_copy[t.sender] -= t.amount
             balance_copy[t.receiver] += t.amount

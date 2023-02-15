@@ -90,3 +90,8 @@ class Network:
                         self.d[i][j] = self.d[j][i]
                     else:
                         self.d[i][j] = lambda: random.expovariate(self.c[i][j]/96)
+
+    def send_transaction(self, sender, receiver, transaction):
+        latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id]()
+        yield self.env.timeout(latency)
+        receiver.receive_transaction(transaction)
