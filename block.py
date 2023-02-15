@@ -7,7 +7,7 @@ class Block:
 
         trans_string = ""
         for transaction in transactions:
-            trans_string += transaction + " "
+            trans_string += str(transaction) + " "
         
         if prevblock == None:
             self.balances = {}
@@ -29,12 +29,12 @@ class Block:
             #     return False
             if t.amount <= 0:
                 return False
-            if balance_copy[t.sender] < t.amount:
+            if balance_copy[t.sender.id] < t.amount:
                 # Changing self.balances to balance_copy because I think
                 # that the current balance should be enough to pay for
                 return False
-            balance_copy[t.sender] -= t.amount
-            balance_copy[t.receiver] += t.amount
+            balance_copy[t.sender.id] -= t.amount
+            balance_copy[t.receiver.id] += t.amount
         self.balances = balance_copy
 
         self.balances[self.userid] += 50

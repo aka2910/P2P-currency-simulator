@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
     env = simpy.Environment()
     genesis = Block(None, 0, set([]), -1)
-    genesis.balances = {i: 0 for i in range(args.n)}
 
     num_slow = int(args.n*args.z0/100)
     slow_peers = random.sample(range(args.n+1), num_slow)
@@ -42,10 +41,12 @@ if __name__ == "__main__":
             config["cpu"] = "high"
             config["hashing power"] = 10/(10*args.n - 9*num_low)
 
-        peers.append(Peer(i, genesis, env, config))
+        p = Peer(i, genesis, env, config)
+        peers.append(p)
+        genesis.balances = {i: 0 for i in range(args.n)}
 
     # Generate the network
-    network = Network(peers, args.I)
+    network = Network(peers, args.I, env)
 
     for peer in peers:
         peer.use_network(network)

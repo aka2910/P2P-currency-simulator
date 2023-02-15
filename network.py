@@ -1,7 +1,7 @@
 import random 
 
 class Network:
-    def __init__(self, peers, interarrival) -> None:
+    def __init__(self, peers, interarrival, env) -> None:
         self.peers = peers
         self.peer_ids = []
         self.interarrival = interarrival
@@ -12,6 +12,8 @@ class Network:
         self.generate_network()
         self.check_graph()
         self.init_properties()
+
+        self.env = env
 
     def generate_network(self):
         for peer in self.peers:
@@ -94,14 +96,22 @@ class Network:
                     if self.d[j][i] is not None:
                         self.d[i][j] = self.d[j][i]
                     else:
-                        self.d[i][j] = lambda: random.expovariate(self.c[i][j]/96)
+                        # def f(c, i, j):
+                        #     print("c:", c)
+                        #     print("i:", i, "j:", j)         
+                        #     print("exp", random.expovariate(c/96))
+                        #     return random.expovariate(c/96)   
+                        self.d[i][j] = random.expovariate
 
     def send_transaction(self, sender, receiver, transaction):
-        latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id]()
+        # print("Send transaction from", sender.id, "to", receiver.id)
+        latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
+        # print("Latency:", latency)
+
         yield self.env.timeout(latency)
-        receiver.receive_transaction(transaction)
+        yield self.env.process(receiver.receive_transaction(transaction))
 
     def send_block(self, sender, receiver, block):
-        latency = self.p[sender.id][receiver.id] + block.size/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id]()
+        latency = self.p[sender.id][receiver.id] + block.size/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
         yield self.env.timeout(latency)
-        receiver.receive_block(block)
+        yield self.env.process(receiver.receive_block(block))
