@@ -145,7 +145,10 @@ class Peer:
     def print_tree(self, filename):
         f = graphviz.Digraph(filename)
 
+        reverse_mapping = {}
+
         for id, block in enumerate(self.node_block_map.keys()):
+            reverse_mapping[block] = id
             f.node(str(id), str(block.blkid) + " : " + str(self.node_block_map[block].timestamp))
 
         # Do BFS and add edges
@@ -153,7 +156,7 @@ class Peer:
         while queue:
             node = queue.pop(0)
             for child in node.children:
-                f.edge(str(id), str(child.block.blkid))
+                f.edge(str(reverse_mapping[node.block]), str(reverse_mapping[child.block]))
                 queue.append(child)
 
         f.render()
