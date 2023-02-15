@@ -1,5 +1,14 @@
 class Block:
+    """
+    A block is a collection of transactions that are validated together.
+    """
     def __init__(self, prevblock, timestamp, transactions, userid):
+        """
+        prevblock: the previous block in the chain
+        timestamp: the time the block was created
+        transactions: a set of transactions
+        userid: the id of the user who mined the block
+        """
         self.prevblock = prevblock
         self.timestamp = timestamp
         self.transactions = transactions
@@ -22,6 +31,9 @@ class Block:
         self.size = 8*(len(transactions) + 1)
 
     def validate(self):
+        """
+        Validates the block by checking that the transactions are valid
+        """
         # check if the transactions are valid
         balance_copy = self.balances.copy()
         for t in self.transactions:
@@ -41,9 +53,15 @@ class Block:
         return True
 
     def get_all_transactions(self):
+        """
+        Returns a set of all transactions in the chain
+        """
         if self.prevblock == None:
             return self.transactions
         return self.transactions.union(self.prevblock.get_all_transactions())
     
     def __str__(self):
+        """
+        Returns a string representation of the block
+        """
         return self.blkid

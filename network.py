@@ -1,7 +1,15 @@
 import random 
 
 class Network:
+    """
+    Network class that contains that handles the propagtions of transactions and blocks
+    """
     def __init__(self, peers, interarrival, env) -> None:
+        """
+        peers: list of peers in the network
+        interarrival: interarrival time of transactions
+        env: simpy environment
+        """
         self.peers = peers
         self.peer_ids = []
         self.interarrival = interarrival
@@ -16,6 +24,10 @@ class Network:
         self.env = env
 
     def generate_network(self):
+        """
+        Generate a random network with 4 neighbors for each peer 
+        Fully connected graph
+        """
         for peer in self.peers:
             num_neighbors = random.randint(4, 8)
             num_neighbors = min(num_neighbors, len(self.peers))
@@ -45,6 +57,8 @@ class Network:
             if not visited[i]:
                 connected = False
 
+        print("connected: ", connected)
+
         if not connected:
             # connect the graph
             num_peers = len(self.peers)
@@ -60,6 +74,9 @@ class Network:
                     
 
     def init_properties(self):
+        """
+        Init the propagation delay, computation delay, and queueing delay for each peer pair
+        """
         self.p = [[0 for i in range(len(self.peers))] for j in range(len(self.peers))]
         self.c = [[0 for i in range(len(self.peers))] for j in range(len(self.peers))]
         self.d = [[None for i in range(len(self.peers))] for j in range(len(self.peers))]
@@ -104,6 +121,9 @@ class Network:
                         self.d[i][j] = random.expovariate
 
     def send_transaction(self, sender, receiver, transaction):
+        """
+        Send and recieve a transaction from sender to receiver with latency
+        """
         # print("Send transaction from", sender.id, "to", receiver.id)
         latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
         # print("Latency:", latency)
@@ -112,6 +132,10 @@ class Network:
         yield self.env.process(receiver.receive_transaction(transaction))
 
     def send_block(self, sender, receiver, block):
+        """
+        Send and recieve a block from sender to receiver with latency
+        """
         latency = self.p[sender.id][receiver.id] + block.size/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
         yield self.env.timeout(latency)
         yield self.env.process(receiver.receive_block(block))
+        print("Block received by", receiver.id)

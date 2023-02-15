@@ -1,5 +1,15 @@
 class Transaction:
+    """
+    A transaction is a transfer of coins from one user to another.
+    """
     def __init__(self, id, sender, receiver, amount, timestamp) -> None:
+        """
+        :param id: The id of the transaction
+        :param sender: The sender of the transaction
+        :param receiver: The receiver of the transaction
+        :param amount: The amount of coins transferred
+        :param timestamp: The time of the transaction
+        """
         # Assume that sender and receiver are ids
         self.id = id
         self.sender = sender
