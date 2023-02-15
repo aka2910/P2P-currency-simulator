@@ -8,12 +8,16 @@ class Network:
         for i in range(len(self.peers)):
             self.peer_ids.append(self.peers[i].id)
 
+        self.generate_network()
+        self.check_graph()
+        self.init_properties()
+
     def generate_network(self):
         for peer in self.peers:
             num_neighbors = random.randint(4, 8)
             num_neighbors = min(num_neighbors, len(self.peers))
 
-            temp_list = self.peers.copy() - [peer]
+            temp_list = list(set(self.peers.copy()) - set([peer]))
             neighbors = random.sample(temp_list, num_neighbors)
 
             for n in neighbors:

@@ -3,15 +3,21 @@ class Block:
         self.prevblock = prevblock
         self.timestamp = timestamp
         self.transactions = transactions
-        self.balances = self.prevblock.balances.copy()
-        self.height = self.prevblock.height + 1
+        if prevblock == None:
+            self.balances = {}
+            self.height = 0
+            self.blkid = hash(str(timestamp))
+        else:
+            self.balances = self.prevblock.balances.copy()
+            self.height = self.prevblock.height + 1
+            self.blkid = hash(str(prevblock.blkid) + str(timestamp) + str(trans_string) + str(userid))
+
         self.userid = userid
 
         trans_string = ""
         for transaction in transactions:
             trans_string += transaction + " "
 
-        self.blkid = hash(str(prevblock.blkid) + str(timestamp) + str(trans_string) + str(userid))
 
         # Size in Kb
         self.size = 8*(len(transactions) + 1)
@@ -39,3 +45,6 @@ class Block:
         if self.prevblock == None:
             return self.transactions
         return self.transactions.union(self.prevblock.get_all_transactions())
+    
+    def __str__(self):
+        return self.blkid
