@@ -56,7 +56,7 @@ if __name__ == "__main__":
     env.run(until=args.time)
 
     for peer in peers:
-        peer.print_tree(f"plots/tree_{peer.id}.dot")
+        peer.print_tree(f"plots_{args.n}/tree_{peer.id}.dot")
 
 
 # python3 run.py --n 50 --z0 0.8 --z1 0.3 --Ttx 1 --I 1 --time 1000
