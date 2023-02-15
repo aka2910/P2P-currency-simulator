@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm *.gv *.gv.pdf
+rm plots/*.gv plots/*.gv.pdf

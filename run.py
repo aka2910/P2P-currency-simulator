@@ -51,4 +51,4 @@ if __name__ == "__main__":
     env.run(until=100)
 
     for peer in peers:
-        peer.print_tree(f"tree_{peer.id}.dot")
+        peer.print_tree(f"plots/tree_{peer.id}.dot")

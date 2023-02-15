@@ -154,4 +154,4 @@ class Peer:
                 f.edge(str(id), str(child.block.blkid))
                 queue.append(child)
 
-        f.view()
+        f.render()
