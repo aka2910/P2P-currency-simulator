@@ -95,3 +95,8 @@ class Network:
         latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id]()
         yield self.env.timeout(latency)
         receiver.receive_transaction(transaction)
+
+    def send_block(self, sender, receiver, block):
+        latency = self.p[sender.id][receiver.id] + block.size/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id]()
+        yield self.env.timeout(latency)
+        receiver.receive_block(block)

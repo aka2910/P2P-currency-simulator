@@ -21,12 +21,14 @@ class Peer:
         self.longest_chain = genesis
         self.transactions = set([])
 
-        self.routing_table = {}
+        self.transaction_routing_table = {}
+        self.block_routing_table = {}
 
         self.env = env
         self.network = network
-        self.root = Node(genesis, time.time())
-    
+        self.root = Node(genesis, self.env.now())
+        self.node_block_map = {genesis: self.root}
+
     def add_neighbor(self, neighbor):
         self.neighbors.append(neighbor)
 
@@ -43,9 +45,9 @@ class Peer:
             while receiver == self:
                 receiver = random.choice(peers)
             # generate a random transaction id by hashing the sender, receiver and time
-            id = hash(str(self.id) + str(receiver.id) + str(time.time()))
+            id = hash(str(self.id) + str(receiver.id) + str(self.env.now()))
 
-            transaction = Transaction(id, self, receiver, coins, time.time())
+            transaction = Transaction(id, self, receiver, coins, self.env.now())
             self.forward_transaction(transaction)
     
     def receive_transaction(self, transaction):
@@ -53,47 +55,86 @@ class Peer:
         self.forward_transaction(transaction)
 
     def forward_transaction(self, transaction):
-        # The structure of self.routing_table is:
+        # The structure of self.transaction_routing_table is:
         # {recipient_peer: [list of TxIDs either sent to or received from this peer]}
 
         for n in self.neighbors:
             id = transaction.id
-            if n in self.routing_table.keys():
+            if n in self.transaction_routing_table.keys():
                 # Send this transaction to that neighbor some how
                 self.network.send_transaction(self, n, transaction)
-                if id not in self.routing_table[n]:
-                    self.routing_table[n].append(id)            
+                if id not in self.transaction_routing_table[n]:
+                    self.transaction_routing_table[n].append(id)            
             else:
                 # Send this transaction to that neighbor some how
                 self.network.send_transaction(self, n, transaction)
-                self.routing_table[n] = [id]
+                self.transaction_routing_table[n] = [id]
 
 
     def receive_block(self, block):
+        isValid = block.validate()
+        if not isValid:
+            return
+
+        # Add the block to the tree
+        node = Node(block, self.env.now())
+        parent = self.node_block_map[block.prevblock]
+        parent.children.append(node)
+
+        # Update the node_block_map
+        self.node_block_map[block] = node
+
+        # Assuming currently that block.height has the correct height
         if block.height > self.longest_chain.height:
             self.longest_chain = block
             self.balance = block.balances[self.id]
+
+            # New longest chain created
+            # Simulating PoW
+            self.env.process(self.create_block())
+
         elif block.height == self.longest_chain.height and block.timestamp < self.longest_chain.timestamp:
             self.longest_chain = block
             self.balance = block.balances[self.id]
 
     def create_block(self):
-        longest_chain_transactions = self.longest_chain.get_all_transactions()
-        valid_transactions = self.transactions - longest_chain_transactions
+        while True:
+            longest_chain_transactions = self.longest_chain.get_all_transactions()
+            valid_transactions = self.transactions - longest_chain_transactions
 
-        num_transactions = random.randint(0, min(len(valid_transactions), 999))
+            num_transactions = random.randint(0, min(len(valid_transactions), 999))
+            transactions = random.sample(valid_transactions, num_transactions)
+            longest_chain = self.longest_chain
+            block = Block(longest_chain, self.env.now(), set(transactions), self.id)
 
-        transactions = random.sample(valid_transactions, num_transactions)
+            # Haven't checked if the block is valid or not
+            # So, some transactions might get lost
 
-        block = Block(self.longest_chain, time.time(), transactions, self.id)
+            # Next block timestamp (tk + Tk)
+            Tk = random.expovariate(self.hashing_power/I)
 
-        # Next block timestamp (tk + Tk)
-        Tk = random.expovariate(self.hashing_power/I)
+            yield self.env.timeout(Tk)
 
-        # Check if the longest is still persistent at tk + Tk
-        # Else don't broadcast
-        sim.broadcast(self, block, time.time() + Tk)
+            new_longest_chain = self.longest_chain
+            if new_longest_chain == longest_chain:
+                self.broadcast_block(block)
 
-    def receive_block(self, block):
-        # validate the block
-        pass
+                # Remove these transactions from the pool
+                self.transactions = self.transactions - set(transactions)
+
+
+    def broadcast_block(self, block):
+        # The structure of self.block_routing_table is:
+        # {recipient_peer: [list of blockIDs either sent to or received from this peer]}
+
+        for n in self.neighbors:
+            id = block.id
+            if n in self.block_routing_table.keys():
+                # Send this block to that neighbor some how
+                self.network.send_block(self, n, block)
+                if id not in self.block_routing_table[n]:
+                    self.block_routing_table[n].append(id)            
+            else:
+                # Send this block to that neighbor some how
+                self.network.send_block(self, n, block)
+                self.block_routing_table[n] = [id]

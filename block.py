@@ -13,6 +13,9 @@ class Block:
 
         self.blkid = hash(str(prevblock.blkid) + str(timestamp) + str(trans_string) + str(userid))
 
+        # Size in Kb
+        self.size = 8*(len(transactions) + 1)
+
     def validate(self):
         # check if the transactions are valid
         balance_copy = self.balances.copy()
