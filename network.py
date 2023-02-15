@@ -1,9 +1,10 @@
 import random 
 
 class Network:
-    def __init__(self, peers) -> None:
+    def __init__(self, peers, interarrival) -> None:
         self.peers = peers
         self.peer_ids = []
+        self.interarrival = interarrival
 
         for i in range(len(self.peers)):
             self.peer_ids.append(self.peers[i].id)

@@ -1,12 +1,8 @@
 import random 
 from transaction import Transaction
 from block import Block
-import time
 from tree import Node
 import graphviz
-
-# I is the average interarrival time between blocks
-I = 600
 
 class Peer:
     def __init__(self, id, genesis, env, config) -> None:
@@ -15,7 +11,7 @@ class Peer:
         self.genesis = genesis
         self.speed = config["speed"] # slow or fast 
         self.cpu = config["cpu"]   # low or high
-        self.balance = 0    
+        self.balance = 0
         self.longest_chain = genesis
         self.transactions = set([])
 
@@ -26,6 +22,7 @@ class Peer:
         self.network = None
         self.root = Node(genesis, self.env.now)
         self.node_block_map = {genesis: self.root}
+        self.hashing_power = config["hashing power"]
 
     def use_network(self, network):
         self.network = network
@@ -36,7 +33,7 @@ class Peer:
     def disconnect_peer(self):
         self.neighbors = []
     
-    def generate_transactions(self, Ttx, time, peers):
+    def generate_transactions(self, Ttx, peers):
         while True:
             r = random.expovariate(1/Ttx)
             coins = random.randint(1, 100)
@@ -99,29 +96,34 @@ class Peer:
             self.balance = block.balances[self.id]
 
     def create_block(self):
-        while True:
-            longest_chain_transactions = self.longest_chain.get_all_transactions()
-            valid_transactions = self.transactions - longest_chain_transactions
+        # while True:
+        longest_chain_transactions = self.longest_chain.get_all_transactions()
+        valid_transactions = self.transactions - longest_chain_transactions
 
-            num_transactions = random.randint(0, min(len(valid_transactions), 999))
-            transactions = random.sample(valid_transactions, num_transactions)
-            longest_chain = self.longest_chain
-            block = Block(longest_chain, self.env.now, set(transactions), self.id)
+        num_transactions = random.randint(0, min(len(valid_transactions), 999))
+        transactions = random.sample(valid_transactions, num_transactions)
+        longest_chain = self.longest_chain
+        block = Block(longest_chain, self.env.now, set(transactions), self.id)
 
-            # Haven't checked if the block is valid or not
-            # So, some transactions might get lost
+        # Haven't checked if the block is valid or not
+        # So, some transactions might get lost
 
-            # Next block timestamp (tk + Tk)
-            Tk = random.expovariate(self.hashing_power/I)
+        # Next block timestamp (tk + Tk)
+        Tk = random.expovariate(self.hashing_power/self.network.interarrival)
 
-            yield self.env.timeout(Tk)
+        yield self.env.timeout(Tk)
 
-            new_longest_chain = self.longest_chain
-            if new_longest_chain == longest_chain:
-                self.broadcast_block(block)
+        new_longest_chain = self.longest_chain
+        if new_longest_chain == longest_chain:
+            self.broadcast_block(block)
 
-                # Remove these transactions from the pool
-                self.transactions = self.transactions - set(transactions)
+            # Modify the longest chain and add the block to the tree
+            self.longest_chain = block
+            node = Node(block, self.env.now)
+            parent = self.node_block_map[block.prevblock]
+            parent.children.append(node)
+
+            self.node_block_map[block] = node
 
 
     def broadcast_block(self, block):

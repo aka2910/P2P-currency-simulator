@@ -12,11 +12,12 @@ if __name__ == "__main__":
     parser.add_argument("--z1", type=float, default=0.5, help = "percent of low CPU peers")
     parser.add_argument("--Ttx", type=float, default=0.5, help = "mean interarrival time of transactions")
     parser.add_argument("--time", type=float, default=100, help = "simulation time")
+    parser.add_argument("--I", type=float, default=0.5, help = "mean interarrival time of blocks")
 
     args = parser.parse_args()
 
     env = simpy.Environment()
-    genesis = Block(None, 0, {}, -1)
+    genesis = Block(None, 0, set([]), -1)
     genesis.balances = {i: 0 for i in range(args.n)}
 
     num_slow = int(args.n*args.z0/100)
@@ -36,19 +37,22 @@ if __name__ == "__main__":
 
         if i in low_peers:
             config["cpu"] = "low"
+            config["hashing power"] = 1/(10*args.n - 9*num_low)
         else:
             config["cpu"] = "high"
+            config["hashing power"] = 10/(10*args.n - 9*num_low)
 
         peers.append(Peer(i, genesis, env, config))
 
     # Generate the network
-    network = Network(peers)
+    network = Network(peers, args.I)
 
     for peer in peers:
         peer.use_network(network)
+        env.process(peer.generate_transactions(args.Ttx, peers))
+        env.process(peer.create_block())
 
-    # env.process()
-    env.run(until=100)
+    env.run(until=args.time)
 
     for peer in peers:
         peer.print_tree(f"plots/tree_{peer.id}.dot")
