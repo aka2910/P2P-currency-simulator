@@ -1,5 +1,6 @@
 import argparse
 import simpy
+import time
 from peer import Peer
 from block import Block
 from network import Network
@@ -54,6 +55,8 @@ if __name__ == "__main__":
         env.process(peer.create_block())
 
     env.run(until=args.time)
+
+    # time.sleep(10)
 
     for peer in peers:
         peer.print_tree(f"plots_{args.n}/tree_{peer.id}.dot")
