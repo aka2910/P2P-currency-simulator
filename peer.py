@@ -34,14 +34,25 @@ class Peer:
         self.hashing_power = config["hashing power"]
 
     def use_network(self, network):
+        """
+        Use the network to send transactions and blocks
+
+        network: network to be used
+        """
         # The network is used to send transactions and blocks
         self.network = network
 
     def add_neighbor(self, neighbor):
+        """
+        Add a neighbor to the peer
+        """
         # Add a neighbor to the peer
         self.neighbors.append(neighbor)
 
     def disconnect_peer(self):
+        """
+        Disconnect the peer from the network
+        """
         # Disconnect the peer from the network
         self.neighbors = []
     
@@ -71,11 +82,21 @@ class Peer:
             print(f"Peer {self.id} generated transaction {id} at time {self.env.now}")
     
     def receive_transaction(self, transaction):
+        """
+        Receive a transaction from a peer
+
+        transaction: transaction received from a peer
+        """
         # receive a transaction from a peer
         self.transactions.add(transaction)
         yield self.env.process(self.forward_transaction(transaction))
 
     def forward_transaction(self, transaction):
+        """
+        Forward a transaction to all neighbors
+
+        transaction: transaction to be forwarded
+        """
         # Forward a transaction to all neighbors
         # The structure of self.transaction_routing_table is:
         # {recipient_peer: [list of TxIDs either sent to or received from this peer]}
@@ -95,6 +116,11 @@ class Peer:
 
 
     def receive_block(self, block):
+        """
+        Receive a block from a peer and add it to the tree if it is valid and update the longest chain
+
+        block: block to be received
+        """
         # Receive a block from a peer
         #print("receive called")
         isValid = block.validate()
@@ -151,6 +177,9 @@ class Peer:
         
 
     def create_block(self):
+        """
+        Create a block and broadcast it to all neighbors in the network 
+        """
         # Create a block
         # while True:
         # yield self.env.timeout(self.id*1000)
@@ -200,6 +229,11 @@ class Peer:
 
 
     def broadcast_block(self, block):
+        """
+        Broadcast the block to all the neighbors in the network and update the block_routing_table
+        The structure of self.block_routing_table is:
+        {recipient_peer: [list of blockIDs either sent to or received from this peer]}
+        """
         # Broadcast the block to all the neighbors        
         # The structure of self.block_routing_table is:
         # {recipient_peer: [list of blockIDs either sent to or received from this peer]}
@@ -221,6 +255,9 @@ class Peer:
             print("Block sent")
 
     def print_tree(self, filename):
+        """
+        Print the tree in a file using graphviz
+        """
         # Print the tree in a file 
         f = graphviz.Digraph(filename)
 
