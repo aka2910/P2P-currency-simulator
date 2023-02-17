@@ -53,8 +53,13 @@ class Peer:
 
             print(f"Peer {self.id} generated transaction {id} at time {self.env.now}")
     
-    def receive_transaction(self, transaction):
+    def receive_transaction(self, sender, transaction):
         self.transactions.add(transaction)
+        if sender in self.transaction_routing_table.keys():
+            if transaction.id not in self.transaction_routing_table[sender]:
+                self.transaction_routing_table[sender].append(transaction.id)
+        else:
+            self.transaction_routing_table[sender] = [transaction.id]
         yield self.env.process(self.forward_transaction(transaction))
 
     def forward_transaction(self, transaction):
@@ -75,7 +80,7 @@ class Peer:
                 yield self.env.process(self.network.send_transaction(self, n, transaction))
 
 
-    def receive_block(self, block):
+    def receive_block(self, sender, block):
         #print("receive called")
         isValid = block.validate()
         if not isValid:
@@ -123,7 +128,11 @@ class Peer:
             #     self.longest_chain = block
             #     self.balance = block.balances[self.id]
             #     to_create = True
-
+        if sender in self.block_routing_table.keys():
+            if block.blkid not in self.block_routing_table[sender]:
+                self.block_routing_table[sender].append(block.blkid)
+        else:
+            self.block_routing_table[sender] = [block.blkid]
         yield self.env.process(self.broadcast_block(block))
         if to_create:
             yield self.env.process(self.create_block())

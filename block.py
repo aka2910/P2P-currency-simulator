@@ -4,10 +4,11 @@ class Block:
     """
     def __init__(self, prevblock, timestamp, transactions, userid):
         """
-        prevblock: the previous block in the chain
+        prevblock: the previous (parent) block in the chain (None if genesis block)
         timestamp: the time the block was created
-        transactions: a set of transactions
+        transactions: a set of transactions in the block
         userid: the id of the user who mined the block
+        balances: a dictionary of the balances of all users in the network
         """
         self.prevblock = prevblock
         self.timestamp = timestamp
@@ -28,33 +29,30 @@ class Block:
             self.blkid = hash(str(prevblock.blkid) + str(timestamp) + str(trans_string) + str(userid))
 
         # Size in Kb
-        self.size = 8*(len(transactions) + 1)
+        self.size = 8*(len(transactions) + 1) # Each transaction is 1 KB = 8 Kb, +1 due to coinbase transaction
 
     def validate(self):
         """
         Validates the block by checking that the transactions are valid
         """
-        # check if the transactions are valid
-        balance_copy = self.balances.copy()
+        balance_copy = self.balances.copy() #balance_copy shows cumulative balance after each transaction
         for t in self.transactions:
-            # if t.sender == t.receiver:
-            #     return False
+            if t.sender == t.receiver:
+                return False
             if t.amount <= 0:
                 return False
-            if balance_copy[t.sender.id] < t.amount:
-                # Changing self.balances to balance_copy because I think
-                # that the current balance should be enough to pay for
+            if balance_copy[t.sender.id] < t.amount: # Check if the sender has enough coins
                 return False
             balance_copy[t.sender.id] -= t.amount
             balance_copy[t.receiver.id] += t.amount
         self.balances = balance_copy
 
-        self.balances[self.userid] += 50
+        self.balances[self.userid] += 50 # Reward for mining the block
         return True
 
     def get_all_transactions(self):
         """
-        Returns a set of all transactions in the chain
+        Returns a set of all transactions in the chain up to this block
         """
         if self.prevblock == None:
             return self.transactions

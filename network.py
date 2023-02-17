@@ -129,7 +129,7 @@ class Network:
         # print("Latency:", latency)
 
         yield self.env.timeout(latency)
-        yield self.env.process(receiver.receive_transaction(transaction))
+        yield self.env.process(receiver.receive_transaction(sender, transaction))
 
     def send_block(self, sender, receiver, block):
         """
@@ -137,5 +137,5 @@ class Network:
         """
         latency = self.p[sender.id][receiver.id] + block.size/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
         yield self.env.timeout(latency)
-        yield self.env.process(receiver.receive_block(block))
+        yield self.env.process(receiver.receive_block(sender,block))
         print("Block received by", receiver.id)
