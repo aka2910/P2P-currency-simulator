@@ -24,6 +24,7 @@ class Peer:
         self.balance = 0 
         self.longest_chain = genesis
         self.transactions = set([])
+        self.num_gen = 0
 
         self.transaction_routing_table = {}
         self.block_routing_table = {}
@@ -193,6 +194,7 @@ class Peer:
         # Create a block
         # while True:
         print("Creating a block")
+        self.num_gen += 1
         # yield self.env.timeout(self.id*1000)
         longest_chain_transactions = self.longest_chain.get_all_transactions()
         valid_transactions = self.transactions - longest_chain_transactions
@@ -327,7 +329,25 @@ class Peer:
         if not os.path.exists(os.path.dirname(filename)):
             os.makedirs(os.path.dirname(filename))
 
+        num_longest = 0
+
+        curr_block = self.longest_chain
+        prev_block = curr_block.prevblock
+
+        while prev_block is not None:
+            if curr_block.userid == self.id:
+                num_longest += 1
+                
+            curr_block = prev_block
+            prev_block = curr_block.prevblock
+
         with open(filename, 'w') as f:
+
+            print("Peer ID : ", self.id, file=f)
+            print("Number of blocks created : ", self.num_gen, file=f)
+            print("Number of blocks ending in longest chain : ", num_longest, file=f)
+            print("Ratio : ", num_longest/self.num_gen, file=f)
+
             reverse_mapping = {}
             for id, blkid in enumerate(self.node_block_map.keys()):
                 reverse_mapping[blkid] = id
