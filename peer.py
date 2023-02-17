@@ -169,6 +169,8 @@ class Peer:
             #     self.longest_chain = block
             #     self.balance = block.balances[self.id]
             #     to_create = True
+
+        # Update routing table to not send block back to sender
         if sender in self.block_routing_table.keys():
             if block.blkid not in self.block_routing_table[sender]:
                 self.block_routing_table[sender].append(block.blkid)
@@ -238,10 +240,8 @@ class Peer:
         The structure of self.block_routing_table is:
         {recipient_peer: [list of blockIDs either sent to or received from this peer]}
         """
-        # Broadcast the block to all the neighbors        
-        # The structure of self.block_routing_table is:
-        # {recipient_peer: [list of blockIDs either sent to or received from this peer]}
 
+        # Same as sending transaction
         for n in self.neighbors:
             id = block.blkid
             if n in self.block_routing_table.keys():
@@ -262,7 +262,6 @@ class Peer:
         """
         Print the tree in a file using graphviz
         """
-        # Print the tree in a file 
         f = graphviz.Digraph(filename)
 
         reverse_mapping = {}
@@ -274,28 +273,6 @@ class Peer:
                 f.node(str(id), str(blkid) + " : " + str(self.node_block_map[blkid].block.userid) + " : " + str(self.node_block_map[blkid].block.prevblock.blkid))
             else:
                 f.node(str(id), str(blkid) + " : " + str(self.node_block_map[blkid].block.userid))
-
-        # # Do BFS and add edges
-        # queue = [self.root]
-        # visited = set()
-        # visited.add(self.root.block.blkid)
-        # edges = set()
-        # # print([x.block.blkid for x in  set(queue[0].children)])
-        # while queue:
-        #     node = queue.pop(0)
-        #     # print(set(node.children))
-        #     for child in node.children:
-        #         if child.block.blkid in visited:
-        #             continue
-        #         edges.add((str(reverse_mapping[node.block.blkid]), str(reverse_mapping[child.block.blkid])))
-        #         visited.add(child.block.blkid)
-        #         queue.append(child)
-        # for e in edges:
-        #     f.edge(e[0], e[1])
-        # f.render()
-
-        # Do DFS and add edges
-
         
         for k, v in self.node_block_map.items():
             if(v.block.prevblock is not None):

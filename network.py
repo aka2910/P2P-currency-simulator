@@ -113,11 +113,6 @@ class Network:
                     if self.d[j][i] is not None:
                         self.d[i][j] = self.d[j][i]
                     else:
-                        # def f(c, i, j):
-                        #     print("c:", c)
-                        #     print("i:", i, "j:", j)         
-                        #     print("exp", random.expovariate(c/96))
-                        #     return random.expovariate(c/96)   
                         self.d[i][j] = random.expovariate
 
     def send_transaction(self, sender, receiver, transaction):
@@ -125,6 +120,7 @@ class Network:
         Send and recieve a transaction from sender to receiver with latency
         """
         # print("Send transaction from", sender.id, "to", receiver.id)
+        # Each transaction is 1KB = 8Kb
         latency = self.p[sender.id][receiver.id] + 8/self.c[sender.id][receiver.id] + self.d[sender.id][receiver.id](self.c[sender.id][receiver.id]/96)
         # print("Latency:", latency)
 
