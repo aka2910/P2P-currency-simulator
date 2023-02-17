@@ -4,4 +4,4 @@ class Node:
         self.block = block
         self.timestamp = timestamp
 
-        self.children = []
+        self.children = [] # List of nodes that are children of this node

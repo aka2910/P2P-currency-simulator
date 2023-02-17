@@ -19,4 +19,4 @@ The parameters are:
 - I: mean interarrival time of blocks
 - time: simulation time
 
-The graph for each peer (block tree) is generated in the folder "plots".
+The graph for each peer (block tree) is generated in the folder "plots_{n}".

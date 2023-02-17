@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    env = simpy.Environment()
-    genesis = Block(None, 0, set([]), -1)
+    env = simpy.Environment()  # simulated in simpy
+    genesis = Block(None, 0, set([]), -1) # genesis block
 
     num_slow = int(args.n*args.z0/100)
     slow_peers = random.sample(range(args.n+1), num_slow)
@@ -37,10 +37,10 @@ if __name__ == "__main__":
 
         if i in low_peers:
             config["cpu"] = "low"
-            config["hashing power"] = 1/(10*args.n - 9*num_low)
+            config["hashing power"] = 1/(10*args.n - 9*num_low) # 1/10 of the hashing power of a high CPU peer
         else:
             config["cpu"] = "high"
-            config["hashing power"] = 10/(10*args.n - 9*num_low)
+            config["hashing power"] = 10/(10*args.n - 9*num_low) # 10 times the hashing power of a low CPU peer
 
         p = Peer(i, genesis, env, config)
         peers.append(p)
@@ -52,7 +52,8 @@ if __name__ == "__main__":
     for peer in peers:
         peer.use_network(network)
         env.process(peer.generate_transactions(args.Ttx, peers))
-        env.process(peer.create_block())
+        if random.random() < 0.25:
+            env.process(peer.create_block())
 
     env.run(until=args.time)
 

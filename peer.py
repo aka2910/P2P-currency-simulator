@@ -20,7 +20,7 @@ class Peer:
         self.genesis = genesis
         self.speed = config["speed"] # slow or fast 
         self.cpu = config["cpu"]   # low or high
-        self.balance = 0
+        self.balance = 0 
         self.longest_chain = genesis
         self.transactions = set([])
 
@@ -34,15 +34,23 @@ class Peer:
         self.hashing_power = config["hashing power"]
 
     def use_network(self, network):
-        # The network is used to send transactions and blocks
+        """
+        Use the network to send transactions and blocks
+
+        network: network to be used
+        """
         self.network = network
 
     def add_neighbor(self, neighbor):
-        # Add a neighbor to the peer
+        """
+        Add a neighbor to the peer
+        """
         self.neighbors.append(neighbor)
 
     def disconnect_peer(self):
-        # Disconnect the peer from the network
+        """
+        Disconnect the peer from the network
+        """
         self.neighbors = []
     
     def generate_transactions(self, Ttx, peers):
@@ -55,7 +63,7 @@ class Peer:
         returns: a generator
         """
         while True:
-            r = random.expovariate(1/Ttx)
+            r = random.expovariate(1/Ttx) # same as exponential distribution with mean Ttx
             coins = random.randint(1, 5)
             yield self.env.timeout(r)
 
@@ -70,31 +78,49 @@ class Peer:
 
             print(f"Peer {self.id} generated transaction {id} at time {self.env.now}")
     
-    def receive_transaction(self, transaction):
-        # receive a transaction from a peer
-        self.transactions.add(transaction)
+    def receive_transaction(self, sender, transaction):
+        """
+        Receive a transaction from a sender
+        """
+        self.transactions.add(transaction) # add the transaction to the set of transactions 
+        # change routing table to not send transaction back to sender
+        if sender in self.transaction_routing_table.keys():
+            if transaction.id not in self.transaction_routing_table[sender]:
+                self.transaction_routing_table[sender].append(transaction.id)
+        else:
+            self.transaction_routing_table[sender] = [transaction.id]
         yield self.env.process(self.forward_transaction(transaction))
 
     def forward_transaction(self, transaction):
+        """
+        Forward a transaction to all neighbors
+
+        transaction: transaction to be forwarded
+        """
         # Forward a transaction to all neighbors
         # The structure of self.transaction_routing_table is:
         # {recipient_peer: [list of TxIDs either sent to or received from this peer]}
         for n in self.neighbors:
             id = transaction.id
             if n in self.transaction_routing_table.keys():
-                # Send this transaction to that neighbor some how
+                # Send this transaction to the neighbor if it has not been sent to it before (to avoid loops)
                 # print(f"Peer {self.id} is sending transaction {id} to peer {n.id}")
                 if id not in self.transaction_routing_table[n]:
                     self.transaction_routing_table[n].append(id)
                     yield self.env.process(self.network.send_transaction(self, n, transaction))
             else:
-                # Send this transaction to that neighbor some how
+                # Send this transaction to that neighbor 
                 # print(f"Peer {self.id} is sending transaction {id} to peer {n.id}")
                 self.transaction_routing_table[n] = [id]
                 yield self.env.process(self.network.send_transaction(self, n, transaction))
 
 
-    def receive_block(self, block):
+    def receive_block(self, sender, block):
+        """
+        Receive a block from a peer and add it to the tree if it is valid and update the longest chain
+
+        block: block to be received
+        """
         # Receive a block from a peer
         #print("receive called")
         isValid = block.validate()
@@ -147,6 +173,12 @@ class Peer:
                 # Simulating PoW
                 to_create = True
 
+        # Update routing table to not send block back to sender
+        if sender in self.block_routing_table.keys():
+            if block.blkid not in self.block_routing_table[sender]:
+                self.block_routing_table[sender].append(block.blkid)
+        else:
+            self.block_routing_table[sender] = [block.blkid]
         yield self.env.process(self.broadcast_block(block))
         if to_create:
             yield self.env.process(self.create_block())
@@ -154,6 +186,9 @@ class Peer:
         
 
     def create_block(self):
+        """
+        Create a block and broadcast it to all neighbors in the network 
+        """
         # Create a block
         # while True:
         print("Creating a block")
@@ -205,10 +240,13 @@ class Peer:
 
 
     def broadcast_block(self, block):
-        # Broadcast the block to all the neighbors        
-        # The structure of self.block_routing_table is:
-        # {recipient_peer: [list of blockIDs either sent to or received from this peer]}
+        """
+        Broadcast the block to all the neighbors in the network and update the block_routing_table
+        The structure of self.block_routing_table is:
+        {recipient_peer: [list of blockIDs either sent to or received from this peer]}
+        """
 
+        # Same as sending transaction
         for n in self.neighbors:
             id = block.blkid
             if n in self.block_routing_table.keys():
@@ -217,30 +255,20 @@ class Peer:
                     print(f"{self.id} Broadcasting block to {n.id}")
                     self.block_routing_table[n].append(id)
 
-                    if self not in n.block_routing_table.keys():
-                        n.block_routing_table[self] = [id]
-                    else:
-                        if id not in n.block_routing_table[self]:
-                            n.block_routing_table[self].append(id)
-
                     yield self.env.process(self.network.send_block(self, n, block))
             else:
                 # Send this block to that neighbor some how
                 print(f"{self.id} Broadcasting block to {n.id}")
                 self.block_routing_table[n] = [id]
 
-                if self not in n.block_routing_table.keys():
-                    n.block_routing_table[self] = [id]
-                else:
-                    if id not in n.block_routing_table[self]:
-                        n.block_routing_table[self].append(id)
-
                 yield self.env.process(self.network.send_block(self, n, block))
                 # print("Block sent")
             print("Block sent")
 
     def print_tree(self, filename):
-        # Print the tree in a file 
+        """
+        Print the tree in a file using graphviz
+        """
         f = graphviz.Digraph(filename, format='png')
 
         reverse_mapping = {}
