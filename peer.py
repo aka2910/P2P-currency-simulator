@@ -346,7 +346,10 @@ class Peer:
             print("Peer ID : ", self.id, file=f)
             print("Number of blocks created : ", self.num_gen, file=f)
             print("Number of blocks ending in longest chain : ", num_longest, file=f)
-            print("Ratio : ", num_longest/self.num_gen, file=f)
+            if(self.num_gen != 0):
+                print("Ratio : ", num_longest/self.num_gen, file=f)
+            else:
+                print("Ratio : Undefined", file=f)
 
             reverse_mapping = {}
             for id, blkid in enumerate(self.node_block_map.keys()):
