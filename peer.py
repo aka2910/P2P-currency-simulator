@@ -3,6 +3,7 @@ from transaction import Transaction
 from block import Block
 from tree import Node
 import graphviz
+import os
 
 class Peer:
     """
@@ -318,3 +319,31 @@ class Peer:
         for e in edges:
             f.edge(e[0], e[1])
         f.render()
+
+    def save_tree(self, filename):
+        """
+        Save the tree in a file using pickle
+        """
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+
+        with open(filename, 'w') as f:
+            reverse_mapping = {}
+            for id, blkid in enumerate(self.node_block_map.keys()):
+                reverse_mapping[blkid] = id
+
+            visited = set()
+            def dfs(visited, nodeBlkid):
+                if nodeBlkid not in visited:
+                    visited.add(nodeBlkid)
+                    print(file=f)
+                    print("Block Hash : ", self.node_block_map[nodeBlkid].block.blkid, file=f)
+                    if(self.node_block_map[nodeBlkid].block.prevblock is not None):
+                        print("Parent Hash : ", self.node_block_map[nodeBlkid].block.prevblock.blkid, file=f)
+                    print("Received at : ", self.node_block_map[nodeBlkid].timestamp, file=f)
+                    print(file=f)
+
+                    for childID in self.node_block_map[nodeBlkid].children:
+                        dfs(visited, childID)
+
+            dfs(visited, self.root.block.blkid)
