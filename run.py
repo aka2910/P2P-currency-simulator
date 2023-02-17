@@ -52,7 +52,8 @@ if __name__ == "__main__":
     for peer in peers:
         peer.use_network(network)
         env.process(peer.generate_transactions(args.Ttx, peers))
-        env.process(peer.create_block())
+        if random.random() < 0.25:
+            env.process(peer.create_block())
 
     env.run(until=args.time)
 
