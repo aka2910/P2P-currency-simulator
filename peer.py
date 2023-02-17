@@ -8,7 +8,13 @@ class Peer:
     """
     A peer(node) in the network
     """
-    def __init__(self, id, genesis, env, config) -> None:       
+    def __init__(self, id, genesis, env, config) -> None:      
+        """
+        id: unique id of the peer
+        genesis: genesis block
+        env: simpy environment
+        config: dictionary containing the configuration of the peer
+        """
         self.id = id
         self.neighbors = []
         self.genesis = genesis
@@ -28,15 +34,37 @@ class Peer:
         self.hashing_power = config["hashing power"]
 
     def use_network(self, network):
+        """
+        Use the network to send transactions and blocks
+
+        network: network to be used
+        """
+        # The network is used to send transactions and blocks
         self.network = network
 
     def add_neighbor(self, neighbor):
+        """
+        Add a neighbor to the peer
+        """
+        # Add a neighbor to the peer
         self.neighbors.append(neighbor)
 
     def disconnect_peer(self):
+        """
+        Disconnect the peer from the network
+        """
+        # Disconnect the peer from the network
         self.neighbors = []
     
     def generate_transactions(self, Ttx, peers):
+        """
+        Generate transactions at a rate of Ttx
+
+        Ttx: mean interarrival time of transactions
+        peers: list of all peers in the network
+
+        returns: a generator
+        """
         while True:
             r = random.expovariate(1/Ttx)
             coins = random.randint(1, 5)
@@ -54,6 +82,9 @@ class Peer:
             print(f"Peer {self.id} generated transaction {id} at time {self.env.now}")
     
     def receive_transaction(self, sender, transaction):
+        """
+        Receive a transaction from a sender
+        """
         self.transactions.add(transaction)
         if sender in self.transaction_routing_table.keys():
             if transaction.id not in self.transaction_routing_table[sender]:
@@ -63,6 +94,12 @@ class Peer:
         yield self.env.process(self.forward_transaction(transaction))
 
     def forward_transaction(self, transaction):
+        """
+        Forward a transaction to all neighbors
+
+        transaction: transaction to be forwarded
+        """
+        # Forward a transaction to all neighbors
         # The structure of self.transaction_routing_table is:
         # {recipient_peer: [list of TxIDs either sent to or received from this peer]}
         for n in self.neighbors:
@@ -81,6 +118,12 @@ class Peer:
 
 
     def receive_block(self, sender, block):
+        """
+        Receive a block from a peer and add it to the tree if it is valid and update the longest chain
+
+        block: block to be received
+        """
+        # Receive a block from a peer
         #print("receive called")
         isValid = block.validate()
         if not isValid:
@@ -140,6 +183,10 @@ class Peer:
         
 
     def create_block(self):
+        """
+        Create a block and broadcast it to all neighbors in the network 
+        """
+        # Create a block
         # while True:
         # yield self.env.timeout(self.id*1000)
         longest_chain_transactions = self.longest_chain.get_all_transactions()
@@ -188,6 +235,12 @@ class Peer:
 
 
     def broadcast_block(self, block):
+        """
+        Broadcast the block to all the neighbors in the network and update the block_routing_table
+        The structure of self.block_routing_table is:
+        {recipient_peer: [list of blockIDs either sent to or received from this peer]}
+        """
+        # Broadcast the block to all the neighbors        
         # The structure of self.block_routing_table is:
         # {recipient_peer: [list of blockIDs either sent to or received from this peer]}
 
@@ -208,6 +261,10 @@ class Peer:
             print("Block sent")
 
     def print_tree(self, filename):
+        """
+        Print the tree in a file using graphviz
+        """
+        # Print the tree in a file 
         f = graphviz.Digraph(filename)
 
         reverse_mapping = {}
