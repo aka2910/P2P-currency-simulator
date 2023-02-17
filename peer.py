@@ -85,7 +85,7 @@ class Peer:
                 # Send this transaction to that neighbor some how
                 # print(f"Peer {self.id} is sending transaction {id} to peer {n.id}")
                 if id not in self.transaction_routing_table[n]:
-                    self.transaction_routing_table[n].append(id)            
+                    self.transaction_routing_table[n].append(id)
                     yield self.env.process(self.network.send_transaction(self, n, transaction))
             else:
                 # Send this transaction to that neighbor some how
@@ -138,11 +138,14 @@ class Peer:
                 # Simulating PoW
                 to_create = True
 
-            # elif block.height == self.longest_chain.height and block.timestamp < self.longest_chain.timestamp:
-            #     print(f"Peer {self.id} has a new longest chain with same height")
-            #     self.longest_chain = block
-            #     self.balance = block.balances[self.id]
-            #     to_create = True
+            elif block.height == self.longest_chain.height and block.timestamp < self.longest_chain.timestamp:
+                print(f"Peer {self.id} has a new longest chain with same height")
+                self.longest_chain = block
+                self.balance = block.balances[self.id]
+
+                # New longest chain created
+                # Simulating PoW
+                to_create = True
 
         yield self.env.process(self.broadcast_block(block))
         if to_create:
@@ -153,6 +156,7 @@ class Peer:
     def create_block(self):
         # Create a block
         # while True:
+        print("Creating a block")
         # yield self.env.timeout(self.id*1000)
         longest_chain_transactions = self.longest_chain.get_all_transactions()
         valid_transactions = self.transactions - longest_chain_transactions
@@ -166,6 +170,7 @@ class Peer:
         # So, some transactions might get lost
         isValid = block.validate()
         if not isValid:
+            print("Invalid block created")
             return
 
         # Next block timestamp (tk + Tk)
@@ -194,9 +199,9 @@ class Peer:
 
             self.node_block_map[block.blkid] = node
             yield self.env.process(self.broadcast_block(block))
-        # else:
-            # yield self.env.process(self.create_block())
-        # self.print_tree(f"debug_plots/tree_{self.id}.dot")
+            # else:
+                # yield self.env.process(self.create_block())
+            # self.print_tree(f"debug_plots/tree_{self.id}.dot")
 
 
     def broadcast_block(self, block):
@@ -211,18 +216,32 @@ class Peer:
                 if id not in self.block_routing_table[n]:
                     print(f"{self.id} Broadcasting block to {n.id}")
                     self.block_routing_table[n].append(id)
+
+                    if self not in n.block_routing_table.keys():
+                        n.block_routing_table[self] = [id]
+                    else:
+                        if id not in n.block_routing_table[self]:
+                            n.block_routing_table[self].append(id)
+
                     yield self.env.process(self.network.send_block(self, n, block))
             else:
                 # Send this block to that neighbor some how
                 print(f"{self.id} Broadcasting block to {n.id}")
                 self.block_routing_table[n] = [id]
+
+                if self not in n.block_routing_table.keys():
+                    n.block_routing_table[self] = [id]
+                else:
+                    if id not in n.block_routing_table[self]:
+                        n.block_routing_table[self].append(id)
+
                 yield self.env.process(self.network.send_block(self, n, block))
                 # print("Block sent")
             print("Block sent")
 
     def print_tree(self, filename):
         # Print the tree in a file 
-        f = graphviz.Digraph(filename)
+        f = graphviz.Digraph(filename, format='png')
 
         reverse_mapping = {}
 
@@ -230,32 +249,14 @@ class Peer:
             reverse_mapping[blkid] = id
             #f.node(str(id), str(blkid) + " : " + str(self.node_block_map[blkid].timestamp))
             if self.node_block_map[blkid].block.prevblock is not None:
-                f.node(str(id), str(blkid) + " : " + str(self.node_block_map[blkid].block.userid) + " : " + str(self.node_block_map[blkid].block.prevblock.blkid))
+                data = str(blkid) + " : " + str(self.node_block_map[blkid].block.userid) + " : " + str(self.node_block_map[blkid].block.prevblock.blkid) + "\n"
+                for tx in self.node_block_map[blkid].block.transactions:
+                    data += str(tx) + "\n"
+
+                f.node(str(id), data)
             else:
                 f.node(str(id), str(blkid) + " : " + str(self.node_block_map[blkid].block.userid))
 
-        # # Do BFS and add edges
-        # queue = [self.root]
-        # visited = set()
-        # visited.add(self.root.block.blkid)
-        # edges = set()
-        # # print([x.block.blkid for x in  set(queue[0].children)])
-        # while queue:
-        #     node = queue.pop(0)
-        #     # print(set(node.children))
-        #     for child in node.children:
-        #         if child.block.blkid in visited:
-        #             continue
-        #         edges.add((str(reverse_mapping[node.block.blkid]), str(reverse_mapping[child.block.blkid])))
-        #         visited.add(child.block.blkid)
-        #         queue.append(child)
-        # for e in edges:
-        #     f.edge(e[0], e[1])
-        # f.render()
-
-        # Do DFS and add edges
-
-        
         for k, v in self.node_block_map.items():
             if(v.block.prevblock is not None):
                 print(k, v.block.blkid, v.block.prevblock.blkid)

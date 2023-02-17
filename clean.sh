@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm plots/*.gv plots/*.gv.pdf debug_plots/*.gv debug_plots/*.gv.pdf
+rm -rf plots_10/* plots_20/* plots_50/* debug_plots/*
