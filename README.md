@@ -8,7 +8,7 @@ Requirements:
 To run the simulation, run the following command:
 
 ```python
-python3 run.py --n 50 --z0 0.8 --z1 0.3 --Ttx 1 --I 1 --time 1000
+python3 run.py --n 10 --z0 0.9 --z1 0.1 --Ttx 1000000 --I 6000 --time 2880000
 ```
 
 The parameters are:
@@ -19,4 +19,4 @@ The parameters are:
 - I: mean interarrival time of blocks
 - time: simulation time
 
-The graph for each peer (block tree) is generated in the folder "plots_{n}".
+The graph for each peer (block tree) is generated in the folder `plots*`.

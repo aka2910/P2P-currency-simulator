@@ -20,10 +20,10 @@ if __name__ == "__main__":
     env = simpy.Environment()  # simulated in simpy
     genesis = Block(None, 0, set([]), -1) # genesis block
 
-    num_slow = int(args.n*args.z0/100)
+    num_slow = int(args.n*args.z0)
     slow_peers = random.sample(range(args.n+1), num_slow)
     
-    num_low = int(args.n*args.z1/100)
+    num_low = int(args.n*args.z1)
     low_peers = random.sample(range(args.n+1), num_low)
 
     # Generate the peers
