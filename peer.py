@@ -344,6 +344,8 @@ class Peer:
         with open(filename, 'w') as f:
 
             print("Peer ID : ", self.id, file=f)
+            print("CPU speed : ", self.cpu, file=f)
+            print("Node speed : ", self.speed, file=f)
             print("Number of blocks created : ", self.num_gen, file=f)
             print("Number of blocks ending in longest chain : ", num_longest, file=f)
             if(self.num_gen != 0):
